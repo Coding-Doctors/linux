@@ -279,44 +279,6 @@ static inline u64 account_other_time(u64 max)
 	return accounted;
 }
 
-#ifdef CONFIG_64BIT
-static inline u64 read_sum_exec_runtime(struct task_struct *t)
-{
-	return tsk_seruntime(t);
-}
-#else
-
-#ifdef	CONFIG_SCHED_PDS
-static u64 read_sum_exec_runtime(struct task_struct *t)
-{
-	u64 ns;
-	struct rq *rq;
-	raw_spinlock_t *lock;
-	unsigned long flags;
-
-	rq = task_access_lock_irqsave(t, &lock, &flags);
-	ns = tsk_seruntime(t);
-	task_access_unlock_irqrestore(t, lock, &flags);
-
-	return ns;
-}
-#else
-static u64 read_sum_exec_runtime(struct task_struct *t)
-{
-	u64 ns;
-	struct rq_flags rf;
-	struct rq *rq;
-
-	rq = task_rq_lock(t, &rf);
-	ns = tsk_seruntime(t);
-	task_rq_unlock(rq, t, &rf);
-
-	return ns;
-}
-#endif
-
-#endif
-
 /*
  * Accumulate raw cputime values of dead tasks (sig->[us]time) and live
  * tasks (sum on group iteration) belonging to @tsk's group.

@@ -176,6 +176,17 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 	return cpufreq_driver_resolve_freq(policy, freq);
 }
 
+#ifdef CONFIG_SCHED_MUQSS
+static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu)
+{
+	struct rq *rq = cpu_rq(cpu);
+
+	*util = rq->load_avg;
+	if (*util > SCHED_CAPACITY_SCALE)
+		*util = SCHED_CAPACITY_SCALE;
+	*max = SCHED_CAPACITY_SCALE;
+}
+#else /* CONFIG_SCHED_MUQSS */
 static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu)
 {
 #ifdef CONFIG_SCHED_PDS
@@ -190,6 +201,7 @@ static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu)
 	*max = cfs_max;
 #endif
 }
+#endif /* CONFIG_SCHED_MUQSS */
 
 static void sugov_set_iowait_boost(struct sugov_cpu *sg_cpu, u64 time,
 				   unsigned int flags)
